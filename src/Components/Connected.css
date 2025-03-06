@@ -1,0 +1,186 @@
+body {
+    margin: 0;
+    font-family: 'Arial', sans-serif;
+    background-color: #f4f6f9;
+  }
+  
+  .connected-wrapper {
+    min-height: 100vh;
+    max-height: 100%;
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    background-color: rgba(0, 0, 0, 0.7);
+    background-blend-mode: overlay;
+  }
+  
+  .connected-container {
+    background-color: rgba(129, 79, 79, 0.9);
+    border-radius: 15px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    padding: 30px;
+    width: 100%;
+    max-width: 1200px;
+  }
+  
+  .header-section {
+    text-align: center;
+    margin-bottom: 30px;
+  }
+  
+  .header-section h1 {
+    color: #2c3e50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+  
+  .header-icon {
+    color: #3498db;
+    width: 40px;
+    height: 40px;
+  }
+  
+  .account-details {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    margin: 20px;
+  }
+  
+  .account-details > div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .account-icon, .time-icon {
+    color: #2ecc71;
+    width: 30px;
+    height: 30px;
+    margin-bottom: 10px;
+  }
+  
+  .account-label, .time-label {
+    color: #7f8c8d;
+    font-size: 0.8em;
+  }
+  
+  .account-value, .time-value {
+    font-weight: bold;
+    color: #2c3e50;
+  }
+  
+  .vote-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    margin: 20px 0;
+  }
+  
+  .input-field {
+    padding: 10px;
+    width: 250px;
+    border: 2px solid #3498db;
+    border-radius: 8px;
+    font-size: 1em;
+  }
+  
+  .vote-button {
+    padding: 12px 25px;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  .vote-button:hover {
+    background-color: #2980b9;
+  }
+  
+  .vote-status-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin: 20px 0;
+  }
+  
+  .vote-status-icon {
+    color: #2ecc71;
+    width: 30px;
+    height: 30px;
+  }
+  
+  .vote-status {
+    color: #2ecc71;
+    font-weight: bold;
+  }
+  
+  .candidates-section {
+    margin-top: 30px;
+    max-width: 800px;
+    width: 100%;
+  }
+  
+  .candidates-section h2 {
+    text-align: center;
+    color: #2c3e50;
+  }
+  
+ /* ... previous CSS remains the same ... */
+
+ .candidates-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 10px;
+    justify-self: center;
+  }
+  
+  .candidates-table th {
+    background-color: #3498db;
+    color: white;
+    padding: 10px;
+    text-align: left;
+  }
+  
+  .candidates-table td {
+    background-color: #ecf0f1;
+    padding: 15px;
+    background-size: cover;
+    background-position: center;
+    color: #2c3e50;
+  }
+  
+  .candidates-table tr:hover td {
+    background-color: #dfe4e6;
+  }
+
+.candidates-table .candidate-cell {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+  }
+  
+  .candidate-profile-image {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #3498db;
+  }
+  
+  .candidates-table td {
+    background-color: #ecf0f1;
+    padding: 15px;
+    vertical-align: middle;
+    color: #2c3e50;
+  }

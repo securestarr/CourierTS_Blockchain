@@ -1,0 +1,9 @@
+const UserRoleComponent = ({ role }) => {
+  return (
+    <div>
+      {role === "admin" && <button>Admin Only Feature</button>}
+      {role === "supplier" && <button>Supplier Feature</button>}
+      {role === "customer" && <p>View Only Access</p>}
+    </div>
+  );
+};
