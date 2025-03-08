@@ -1,6 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef} from "react";
+import { QRCodeCanvas } from "qrcode.react"; 
 import { ethers } from "ethers";
 import "./App.css";
+// import { QRCodeCanvas } from "qrcode.react";
+import jsQR from "jsqr"; // Import jsQR for decoding QR codes
 
 // Update with your contract's ABI and deployed address
 import { contractAbi, contractAddress } from "./Constant/constant";
@@ -16,6 +19,53 @@ function App() {
   const [newPackageStage, setNewPackageStage] = useState("");
   const [newHandlerAddress, setNewHandlerAddress] = useState("");
   const [packageHistory, setPackageHistory] = useState([]);
+  const [qrCodeData, setQrCodeData] = useState(null);
+  const [isScanning, setIsScanning] = useState(false);
+  const [selectedTab, setSelectedTab] = useState("manual");
+  const [scannedPackageId, setScannedPackageId] = useState("");
+
+  // **📌 Handle Image Upload & QR Code Extraction**
+const handleImageUpload = (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function (e) {
+    const img = new Image();
+    img.src = e.target.result;
+
+    img.onload = function () {
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+
+      canvas.width = img.width;
+      canvas.height = img.height;
+      ctx.drawImage(img, 0, 0, img.width, img.height);
+
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const qrCode = jsQR(imageData.data, canvas.width, canvas.height);
+
+      // 
+      if (qrCode) {
+        try {
+          const qrData = JSON.parse(qrCode.data); // Parse JSON data from QR
+          console.log("QR data",qrData)
+          if (qrData.packageId) {
+            setScannedPackageId(qrData.packageId);
+          } else {
+            console.error("Invalid QR code format");
+          }
+        } catch (error) {
+          console.error("Error parsing QR code:", error);
+        }
+      } else {
+        console.error("No QR code found in the image.");
+        alert("No QR code detected. Try another image.");
+      }
+    };
+  };
+  reader.readAsDataURL(file);
+};
 
   useEffect(() => {
     if (window.ethereum) {
@@ -142,46 +192,102 @@ function App() {
           stage: getPackageStage(entry.stage),
         }))
       );
+      return history.map((entry) => ({
+        handler: entry.handler,
+        timestamp: new Date(entry.timestamp.toNumber() * 1000).toLocaleString(),
+        stage: getPackageStage(entry.stage),
+      }));
     } catch (error) {
       console.error("Error fetching package history:", error);
-      setPackageHistory([]);
+      setPackageHistory([])
+      return []; // Return an empty array on failure
     }
   }
   
-  async function updatePackageStatus() {
-    if (
-      !provider || 
-      !selectedPackageId || 
-      !newPackageStage || 
-      !newHandlerAddress
-    ) {
+  const generateQRCode = async (packageId) => {
+    const historyData = await fetchPackageHistory(packageId);
+  
+    if (!historyData || historyData.length === 0) {
+      console.error("No history data found for package ID:", packageId);
+      setQrCodeData(null); // Clear QR code if no data is found
       return;
     }
   
-    const signer = provider.getSigner();
-    const contract = new ethers.Contract(
-      contractAddress,
-      contractAbi,
-      signer
-    );
+  // Include package ID in the QR code data
+  const qrData = JSON.stringify({ packageId, history: historyData });
+    setQrCodeData(qrData);
+  };
   
+  // async function updatePackageStatus() {
+  //   if (
+  //     !provider || 
+  //     !selectedPackageId || 
+  //     !newPackageStage || 
+  //     !newHandlerAddress
+  //   ) {
+  //     return;
+  //   }
+  
+  //   const signer = provider.getSigner();
+  //   const contract = new ethers.Contract(
+  //     contractAddress,
+  //     contractAbi,
+  //     signer
+  //   );
+  
+  //   try {
+  //     const stageValue = parseInt(newPackageStage, 10); // Convert stage to integer
+  //     const tx = await contract.updatePackageStatus(
+  //       parseInt(selectedPackageId, 10),
+  //       stageValue,
+  //       newHandlerAddress
+  //     );
+  //     await tx.wait();
+  //     fetchPackages();
+  //     setSelectedPackageId("");
+  //     setNewPackageStage("");
+  //     setNewHandlerAddress("");
+  //   } catch (error) {
+  //     console.error("Error updating package status:", error);
+  //   }
+  // }
+  
+  async function updatePackageStatus(packageId, handlerAddress) {
+    if (!provider || !packageId || !newPackageStage) {
+      console.error("Missing fields!");
+      return;
+    }
+
+    const signer = provider.getSigner();
+    const contract = new ethers.Contract(contractAddress, contractAbi, signer);
+
     try {
       const stageValue = parseInt(newPackageStage, 10); // Convert stage to integer
       const tx = await contract.updatePackageStatus(
-        parseInt(selectedPackageId, 10),
+        parseInt(packageId, 10),
         stageValue,
-        newHandlerAddress
+        handlerAddress
       );
       await tx.wait();
       fetchPackages();
       setSelectedPackageId("");
       setNewPackageStage("");
       setNewHandlerAddress("");
+      setScannedPackageId("");
     } catch (error) {
       console.error("Error updating package status:", error);
     }
   }
-  
+  const handleScan = (data) => {
+    if (data) {
+      setScannedPackageId(data);
+      setIsScanning(false);
+    }
+  };
+  const handleError = (err) => {
+    console.error("QR Scan Error:", err);
+  };
+
   function handleAccountsChanged(accounts) {
     if (accounts.length > 0) {
       setAccount(accounts[0]);
@@ -346,7 +452,7 @@ function App() {
                       </tr>
                     </thead>
                     <tbody>
-                      {products.map((product) => (
+                      {/* {products.map((product) => (
                         <tr
                           key={product.id}
                           style={styles.tr}
@@ -358,7 +464,7 @@ function App() {
                           <td style={styles.tdNoWrap}>{product.manufacturer}</td>
                           <td style={styles.tdNoWrap}>{product.currentLocation}</td>
                         </tr>
-                      ))}
+                      ))} */}
                     </tbody>
                   </table>
                 </div>
@@ -378,6 +484,8 @@ function App() {
                         <th style={styles.th}>Stage</th>
                         <th style={styles.th}>Creator</th>
                         <th style={styles.th}>Timestamp</th>
+                        <th style={styles.th}>QRCode</th>
+
                       </tr>
                     </thead>
                     <tbody>
@@ -394,6 +502,24 @@ function App() {
                           <td style={styles.tdNoWrap}>{pkg.stage}</td>
                           <td style={styles.tdNoWrap}>{pkg.creator}</td>
                           <td style={styles.tdNoWrap}>{pkg.timestamp}</td>
+                          <td style={styles.tdNoWrap}>
+                                <button 
+                                  style={{
+                                    padding: '5px 10px',
+                                    backgroundColor: '#007bff',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '5px',
+                                    cursor: 'pointer'
+                                  }} 
+                                  onClick={() => generateQRCode(pkg.id)}
+                                >
+                                  Generate QR
+                                </button>
+                                {qrCodeData && (
+                                  <QRCodeCanvas value={qrCodeData} size={100} />
+                                )}
+                              </td>
                         </tr>
                       ))}
                     </tbody>
@@ -418,7 +544,7 @@ function App() {
               </div>
             </section>
 
-            <section style={styles.formSection}>
+            {/* <section style={styles.formSection}>
               <h2 style={styles.heading}>Update Package Status</h2>
               <div style={styles.form}>
                 <input
@@ -451,7 +577,78 @@ function App() {
                   Update Status
                 </button>
               </div>
-            </section>
+            </section> */}
+             <section style={styles.formSection}>
+      <h2 style={styles.heading}>Update Package Status</h2>
+
+      {/* Tabs for Manual & QR Code Update */}
+      <div>
+        <button onClick={() => setSelectedTab("manual")}>Update Manually</button>
+        <button onClick={() => setSelectedTab("qr")}>Upload QR Code Image</button>
+      </div>
+
+      {selectedTab === "manual" ? (
+        /* Manual Update Form */
+        <div style={styles.form}>
+          <input
+            style={styles.input}
+            type="number"
+            placeholder="Package ID"
+            value={selectedPackageId}
+            onChange={(e) => setSelectedPackageId(e.target.value)}
+          />
+          <select
+            style={styles.select}
+            value={newPackageStage}
+            onChange={(e) => setNewPackageStage(e.target.value)}
+          >
+            <option value="">Select Stage</option>
+            {stageOptions.map((stage) => (
+              <option key={stage.value} value={stage.value}>
+                {stage.label}
+              </option>
+            ))}
+          </select>
+          <input
+            style={styles.input}
+            type="text"
+            placeholder="New Handler Address"
+            value={newHandlerAddress}
+            onChange={(e) => setNewHandlerAddress(e.target.value)}
+          />
+          <button style={styles.button} onClick={() => updatePackageStatus(selectedPackageId, newHandlerAddress)}>
+            Update Status
+          </button>
+        </div>
+      ) : (
+        /* QR Code Image Upload Section */
+        <div style={styles.form}>
+          <h3>Upload QR Code Image (PNG, JPEG)</h3>
+          <input type="file" accept="image/png, image/jpeg" onChange={handleImageUpload} />
+
+          {scannedPackageId && (
+            <div>
+              <p>Scanned Package ID: {scannedPackageId}</p>
+              <select
+                style={styles.select}
+                value={newPackageStage}
+                onChange={(e) => setNewPackageStage(e.target.value)}
+              >
+                <option value="">Select Stage</option>
+                {stageOptions.map((stage) => (
+                  <option key={stage.value} value={stage.value}>
+                    {stage.label}
+                  </option>
+                ))}
+              </select>
+              <button style={styles.button} onClick={() => updatePackageStatus(scannedPackageId, provider.getSigner().getAddress())}>
+                Update Status
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+    </section>
             <section style={styles.section}>
   <h2 style={styles.heading}>Retrieve Package History</h2>
 
