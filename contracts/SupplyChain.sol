@@ -117,30 +117,30 @@ contract SupplyChain {
     }
 
     // Function to update the package status and handler
-    function updatePackageStatus(uint256 packageId, uint8 newStage, address newHandler) public {
-        require(packageId > 0 && packageId <= packageCounter, "Invalid package ID");
-        require(newStage >= uint8(PackageStage.Created) && newStage <= uint8(PackageStage.Completed), "Invalid stage");
-        require(newHandler != address(0), "Invalid handler address");
+    function updatePackageStatus(uint256 packageId, uint8 newStage, address newHandler) public { 
+    require(packageId > 0 && packageId <= packageCounter, "Invalid package ID");
+    require(newStage >= uint8(PackageStage.Created) && newStage <= uint8(PackageStage.Completed), "Invalid stage");
+    require(newHandler != address(0), "Invalid handler address");
 
-        Package storage pkg = packages[packageId];
-        require(msg.sender == pkg.creator || msg.sender == pkg.currentHandler, "Not authorized");
+    Package storage pkg = packages[packageId];
 
-        // Update the package stage and handler
-        pkg.stage = PackageStage(newStage);
-        pkg.currentHandler = newHandler;
+    // 🚀 Removed authorization check - Now ANY account can update the package status
 
-        // Record the update in the package history
-        packageHistories[packageId].push(PackageHistory({
-            stage: PackageStage(newStage),
-            handler: newHandler,
-            timestamp: block.timestamp
-        }));
+    // Update the package stage and handler
+    pkg.stage = PackageStage(newStage);
+    pkg.currentHandler = newHandler;
 
-        packageHandlers[packageId].push(newHandler); // Update handler list
+    // Record the update in the package history
+    packageHistories[packageId].push(PackageHistory({
+        stage: PackageStage(newStage),
+        handler: newHandler,
+        timestamp: block.timestamp
+    }));
 
-        emit PackageStatusUpdated(packageId, newStage, newHandler, block.timestamp);
-    }
+    packageHandlers[packageId].push(newHandler); // Update handler list
 
+    emit PackageStatusUpdated(packageId, newStage, newHandler, block.timestamp);
+}
     // Retrieve the handler history for a package
     function getPackageHandlers(uint256 packageId) public view returns (address[] memory) {
         require(packageId > 0 && packageId <= packageCounter, "Invalid package ID");

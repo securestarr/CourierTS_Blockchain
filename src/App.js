@@ -134,6 +134,7 @@ const handleImageUpload = (event) => {
 
       for (let i = 1; i <= packageCount; i++) {
         const packageData = await contract.packages(i);
+        console.log("packageData",packageData)
         fetchedPackages.push({
           id: packageData.id.toNumber(),
           description: packageData.description,
@@ -143,7 +144,7 @@ const handleImageUpload = (event) => {
           timestamp: new Date(packageData.timestamp.toNumber() * 1000).toLocaleString(),
         });
       }
-
+console.log("packages",fetchPackages)
       setPackages(fetchedPackages);
     } catch (error) {
       console.error("Error fetching packages:", error);
@@ -252,32 +253,86 @@ const handleImageUpload = (event) => {
   //   }
   // }
   
-  async function updatePackageStatus(packageId, handlerAddress) {
-    if (!provider || !packageId || !newPackageStage) {
-      console.error("Missing fields!");
-      return;
-    }
+  // async function updatePackageStatus(packageId, handlerAddress) {
+  //   if (!provider || !packageId || !newPackageStage) {
+  //     console.error("Missing fields!");
+  //     return;
+  //   }
 
-    const signer = provider.getSigner();
-    const contract = new ethers.Contract(contractAddress, contractAbi, signer);
+  //   const signer = provider.getSigner();
+  //   console.log("signer address",signer)
+  //   const contract = new ethers.Contract(contractAddress, contractAbi, signer);
 
-    try {
-      const stageValue = parseInt(newPackageStage, 10); // Convert stage to integer
-      const tx = await contract.updatePackageStatus(
-        parseInt(packageId, 10),
-        stageValue,
-        handlerAddress
-      );
-      await tx.wait();
-      fetchPackages();
-      setSelectedPackageId("");
-      setNewPackageStage("");
-      setNewHandlerAddress("");
-      setScannedPackageId("");
-    } catch (error) {
-      console.error("Error updating package status:", error);
-    }
+  //   try {
+  //     const stageValue = parseInt(newPackageStage, 10); // Convert stage to integer
+  //     const tx = await contract.updatePackageStatus(
+  //       parseInt(packageId, 10),
+  //       stageValue,
+  //       handlerAddress
+  //     );
+  //     await tx.wait();
+  //     fetchPackages();
+  //     setSelectedPackageId("");
+  //     setNewPackageStage("");
+  //     setNewHandlerAddress("");
+  //     setScannedPackageId("");
+  //   } catch (error) {
+  //     console.error("Error updating package status:", error);
+  //   }
+  // }
+//   async function updatePackageStatus(packageId, handlerAddress) {
+//     if (!provider || !packageId || !newPackageStage) {
+//       console.error("Missing fields!");
+//       return;
+//     }
+
+//     const signer = provider.getSigner();
+//     const contract = new ethers.Contract(contractAddress, contractAbi, signer);
+
+//     try {
+//       const stageValue = parseInt(newPackageStage, 10); 
+//       const tx = await contract.updatePackageStatus(
+//         parseInt(packageId, 10),
+//         stageValue,
+//         handlerAddress
+//       );
+//       await tx.wait();
+//       fetchPackages();
+//       setSelectedPackageId("");
+//       setNewPackageStage("");
+//       setNewHandlerAddress("");
+//       setScannedPackageId("");
+//     } catch (error) {
+//       console.error("Error updating package status:", error);
+//     }
+// }
+async function updatePackageStatus(packageId, handlerAddress) {
+  if (!provider || !packageId || !newPackageStage) {
+    console.error("Missing fields!");
+    return;
   }
+
+  const signer = provider.getSigner();
+  const contract = new ethers.Contract(contractAddress, contractAbi, signer);
+
+  try {
+    const stageValue = parseInt(newPackageStage, 10); 
+    const tx = await contract.updatePackageStatus(
+      parseInt(packageId, 10),
+      stageValue,
+      handlerAddress
+    );
+    await tx.wait();
+    fetchPackages();
+    setSelectedPackageId("");
+    setNewPackageStage("");
+    setNewHandlerAddress("");
+    setScannedPackageId("");
+  } catch (error) {
+    console.error("Error updating package status:", error);
+  }
+}
+
   const handleScan = (data) => {
     if (data) {
       setScannedPackageId(data);
